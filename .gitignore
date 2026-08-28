@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+__pycache__/
+*.pyc
+*.pth
+*.onnx
+data/raw/
+data/splits/
+ml_pipeline/checkpoints/
+ml_pipeline/outputs/
+backend/model_artifacts/model.pth
+.DS_Store

@@ -1,0 +1,10 @@
+{
+  "input_size": 224,
+  "mean": [0.485, 0.456, 0.406],
+  "std": [0.229, 0.224, 0.225],
+  "clahe": {
+    "clip_limit": 2.0,
+    "tile_grid_size": [8, 8]
+  },
+  "note": "ImageNet mean/std used during training for transfer learning."
+}

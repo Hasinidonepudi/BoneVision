@@ -1,0 +1,62 @@
+# BoneVision Training Configuration
+# All hyperparameters and paths in one place for reproducibility.
+
+seed: 42
+
+dataset:
+  root: "C:/Users/heman/Downloads/archive_extracted/Knee Osteoarthritis Classification"
+  classes: ["Normal", "Osteopenia", "Osteoporosis"]
+  splits: ["train", "val", "test"]
+
+preprocessing:
+  input_size: 224
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  clahe:
+    clip_limit: 2.0
+    tile_grid_size: [8, 8]
+
+augmentation:
+  # Applied ONLY to training images that do NOT have '_aug' in filename
+  horizontal_flip: true
+  rotation_degrees: 10
+  brightness_jitter: 0.2
+  contrast_jitter: 0.2
+  gaussian_blur_kernel: 3
+  gaussian_blur_sigma: [0.1, 2.0]
+
+training:
+  epochs: 15
+  batch_size: 16          # CPU-friendly batch size
+  num_workers: 0          # 0 = main process only (safer on Windows CPU)
+  pin_memory: false       # Only beneficial with CUDA
+  early_stopping_patience: 5
+  early_stopping_metric: "val_auc"
+
+optimizer:
+  type: "adamw"
+  lr: 0.0001
+  weight_decay: 0.01
+
+scheduler:
+  type: "cosine"
+  T_max: 15
+  eta_min: 1.0e-6
+
+# Architectures to compare (CPU-optimised — fast, lightweight)
+architectures:
+  - name: "efficientnet_b0"
+    pretrained: true
+    freeze_backbone_epochs: 3
+  - name: "mobilenet_v3_large"
+    pretrained: true
+    freeze_backbone_epochs: 3
+
+output:
+  model_dir: "C:/Users/heman/OneDrive/Desktop/haasmp/BoneVision/backend/model_artifacts"
+  checkpoints_dir: "C:/Users/heman/OneDrive/Desktop/haasmp/BoneVision/ml_pipeline/checkpoints"
+  gradcam_dir: "C:/Users/heman/OneDrive/Desktop/haasmp/BoneVision/ml_pipeline/outputs/gradcam_samples"
+  reports_dir: "C:/Users/heman/OneDrive/Desktop/haasmp/BoneVision/ml_pipeline/outputs"
+
+inference:
+  confidence_threshold: 0.60

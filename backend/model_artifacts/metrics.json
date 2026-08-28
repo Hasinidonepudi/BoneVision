@@ -1,0 +1,55 @@
+{
+  "accuracy": 0.8463,
+  "macro_precision": 0.8469,
+  "macro_recall": 0.8463,
+  "macro_f1": 0.8453,
+  "roc_auc_macro": 0.9567,
+  "pr_auc_macro": 0.9254,
+  "per_class": {
+    "Normal": {
+      "precision": 0.8449,
+      "recall_sensitivity": 0.8778,
+      "specificity": 0.9194,
+      "f1_score": 0.861,
+      "support": 180
+    },
+    "Osteopenia": {
+      "precision": 0.8385,
+      "recall_sensitivity": 0.8944,
+      "specificity": 0.9139,
+      "f1_score": 0.8656,
+      "support": 180
+    },
+    "Osteoporosis": {
+      "precision": 0.8571,
+      "recall_sensitivity": 0.7667,
+      "specificity": 0.9361,
+      "f1_score": 0.8094,
+      "support": 180
+    }
+  },
+  "confusion_matrix": [
+    [
+      158,
+      10,
+      12
+    ],
+    [
+      8,
+      161,
+      11
+    ],
+    [
+      21,
+      21,
+      138
+    ]
+  ],
+  "n_samples": 540,
+  "architecture": "efficientnet_b0",
+  "model_version": "bonevision-v1.0-efficientnet_b0",
+  "temperature": 1.0,
+  "evaluation_split": "test",
+  "status": "evaluated",
+  "classification_report_text": "              precision    recall  f1-score   support\n\n      Normal       0.84      0.88      0.86       180\n  Osteopenia       0.84      0.89      0.87       180\nOsteoporosis       0.86      0.77      0.81       180\n\n    accuracy                           0.85       540\n   macro avg       0.85      0.85      0.85       540\nweighted avg       0.85      0.85      0.85       540\n"
+}

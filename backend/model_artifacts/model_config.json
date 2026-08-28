@@ -1,0 +1,19 @@
+{
+  "model_name": "bonevision-v1.0-efficientnet_b0",
+  "architecture": "efficientnet_b0",
+  "num_classes": 3,
+  "classes": [
+    "Normal",
+    "Osteopenia",
+    "Osteoporosis"
+  ],
+  "confidence_threshold": 0.0,
+  "temperature": 1.0,
+  "trained": true,
+  "demo_mode": false,
+  "created_at": "2026-08-28",
+  "dataset": "Knee Osteoarthritis Classification",
+  "test_accuracy": 0.8463,
+  "roc_auc": 0.9525,
+  "seed": 42
+}

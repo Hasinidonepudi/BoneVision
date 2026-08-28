@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-100 font-sans antialiased;
+  }
+  * {
+    @apply box-border;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+}
