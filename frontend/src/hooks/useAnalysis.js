@@ -1,8 +1,4 @@
-// useAnalysis hook
-// Manages the full analysis state machine: idle → steps → done/error
-// Simulates step-by-step progress even in demo mode for realistic UX.
-
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { analyzeImage } from '../services/api'
 
 export const ANALYSIS_STATES = {
@@ -15,11 +11,16 @@ export const ANALYSIS_STATES = {
   ERROR: 'error',
 }
 
-const STEP_DELAYS = {
-  [ANALYSIS_STATES.UPLOADING]: 0,
-  [ANALYSIS_STATES.VALIDATING]: 600,
-  [ANALYSIS_STATES.PREPROCESSING]: 1200,
-  [ANALYSIS_STATES.ANALYZING]: 1900,
+export function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('bonevision_history') || '[]')
+  } catch {
+    return []
+  }
+}
+
+export function clearHistory() {
+  localStorage.removeItem('bonevision_history')
 }
 
 export function useAnalysis() {
@@ -27,78 +28,71 @@ export function useAnalysis() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
-  const analyze = useCallback(async (file) => {
-    setResult(null)
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  async function analyze(file) {
     setError(null)
-
-    // Kick off step progression
-    setState(ANALYSIS_STATES.UPLOADING)
-
-    const stepTimers = []
-
-    // Schedule simulated step transitions
-    Object.entries(STEP_DELAYS).forEach(([step, ms]) => {
-      if (ms > 0) {
-        const t = setTimeout(() => setState(step), ms)
-        stepTimers.push(t)
-      }
-    })
+    setResult(null)
 
     try {
-      const data = await analyzeImage(file)
-      stepTimers.forEach(clearTimeout)
+      // Step 1: Uploading state
+      setState(ANALYSIS_STATES.UPLOADING)
+      await wait(400)
+
+      // Step 2: Validating X-ray resolution & DICOM/format criteria
+      setState(ANALYSIS_STATES.VALIDATING)
+      await wait(500)
+
+      // Step 3: Medical CLAHE & Bone Edge Preprocessing
+      setState(ANALYSIS_STATES.PREPROCESSING)
+      await wait(600)
+
+      // Step 4: Deep Learning Inference & Grad-CAM Computation
+      setState(ANALYSIS_STATES.ANALYZING)
+      
+      const [apiResult] = await Promise.all([
+        analyzeImage(file),
+        wait(600), // Smooth 2s total realistic clinical inspection experience
+      ])
+
+      // Step 5: Finished
+      setResult(apiResult)
       setState(ANALYSIS_STATES.DONE)
-      setResult(data)
 
-      // Persist to history
-      saveToHistory({
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        filename: file.name,
-        status: data.status,
-        predicted_class: data.predicted_class,
-        confidence: data.confidence,
-        demo_mode: data.demo_mode,
-      })
+      // Save to localStorage history
+      try {
+        const historyItem = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          filename: file.name,
+          timestamp: new Date().toISOString(),
+          status: apiResult.status,
+          predicted_class: apiResult.predicted_class,
+          confidence: apiResult.confidence,
+          inference_time_ms: apiResult.inference_time_ms,
+          demo_mode: apiResult.demo_mode,
+        }
+        const existing = getHistory()
+        localStorage.setItem(
+          'bonevision_history',
+          JSON.stringify([historyItem, ...existing].slice(0, 50))
+        )
+      } catch (e) {
+        console.warn('Could not save to history:', e)
+      }
     } catch (err) {
-      stepTimers.forEach(clearTimeout)
+      console.error('Analysis failed:', err)
+      setError(err.message || 'An unexpected error occurred during analysis.')
       setState(ANALYSIS_STATES.ERROR)
-      setError(err.message || 'Analysis failed. Please try again.')
     }
-  }, [])
+  }
 
-  const reset = useCallback(() => {
+  function reset() {
     setState(ANALYSIS_STATES.IDLE)
     setResult(null)
     setError(null)
-  }, [])
+  }
 
   return { state, result, error, analyze, reset }
-}
-
-// ---------------------------------------------------------------------------
-// LocalStorage history helpers
-// ---------------------------------------------------------------------------
-const HISTORY_KEY = 'bonevision_history'
-
-export function saveToHistory(entry) {
-  try {
-    const existing = getHistory()
-    const updated = [entry, ...existing].slice(0, 50) // Keep max 50
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
-  } catch {
-    // localStorage might be unavailable
-  }
-}
-
-export function getHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
-
-export function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY)
 }

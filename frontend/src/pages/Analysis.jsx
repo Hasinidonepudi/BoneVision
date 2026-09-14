@@ -11,6 +11,7 @@ import GradCamOverlay from '../components/GradCamOverlay'
 import UncertainState from '../components/UncertainState'
 import PatientModal from '../components/PatientModal'
 import PatientForm from '../components/PatientForm'
+import ClinicalBMDCard from '../components/ClinicalBMDCard'
 import { generatePDFReport } from '../utils/pdfExport'
 import { useAnalysis, ANALYSIS_STATES } from '../hooks/useAnalysis'
 
@@ -149,12 +150,19 @@ export default function Analysis() {
                 <ResultCard result={result} />
               </div>
 
+              {/* Feature 3: Clinical BMD Assessment & WHO T-Score Correlate */}
+              <ClinicalBMDCard
+                predictedClass={result.predicted_class}
+                confidence={result.confidence}
+              />
+
               {result.status === 'UNCERTAIN' && (
                 <UncertainState confidence={result.confidence} />
               )}
 
               <ConfidenceChart predictions={result.predictions} />
 
+              {/* Feature 1: Interactive Heatmap Opacity & Zoom Slider */}
               <GradCamOverlay
                 file={file}
                 heatmapBase64={result.gradcam_heatmap}
