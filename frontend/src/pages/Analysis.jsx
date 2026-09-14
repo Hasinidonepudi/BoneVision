@@ -12,6 +12,7 @@ import UncertainState from '../components/UncertainState'
 import PatientModal from '../components/PatientModal'
 import PatientForm from '../components/PatientForm'
 import ClinicalBMDCard from '../components/ClinicalBMDCard'
+import ModelSwitcher from '../components/ModelSwitcher'
 import { generatePDFReport } from '../utils/pdfExport'
 import { useAnalysis, ANALYSIS_STATES } from '../hooks/useAnalysis'
 
@@ -25,6 +26,7 @@ const RUNNING_STATES = [
 export default function Analysis() {
   const { state, result, error, analyze, reset } = useAnalysis()
   const [file, setFile] = useState(null)
+  const [selectedModel, setSelectedModel] = useState('efficientnet_b0')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [patientInfo, setPatientInfo] = useState({
     id: '',
@@ -43,7 +45,7 @@ export default function Analysis() {
 
   function handleFileSelect(f) {
     setFile(f)
-    analyze(f)
+    analyze(f, selectedModel)
   }
 
   function handleReset() {
@@ -106,6 +108,11 @@ export default function Analysis() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
             >
+              <ModelSwitcher
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                disabled={isRunning}
+              />
               <PatientForm patientInfo={patientInfo} setPatientInfo={setPatientInfo} />
               <UploadZone onFileSelect={handleFileSelect} disabled={isRunning} />
               

@@ -32,7 +32,7 @@ export function useAnalysis() {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
-  async function analyze(file) {
+  async function analyze(file, modelType = 'efficientnet_b0') {
     setError(null)
     setResult(null)
 
@@ -53,7 +53,7 @@ export function useAnalysis() {
       setState(ANALYSIS_STATES.ANALYZING)
       
       const [apiResult] = await Promise.all([
-        analyzeImage(file),
+        analyzeImage(file, modelType),
         wait(600), // Smooth 2s total realistic clinical inspection experience
       ])
 
@@ -70,6 +70,7 @@ export function useAnalysis() {
           status: apiResult.status,
           predicted_class: apiResult.predicted_class,
           confidence: apiResult.confidence,
+          model_version: apiResult.model_version,
           inference_time_ms: apiResult.inference_time_ms,
           demo_mode: apiResult.demo_mode,
         }
