@@ -157,10 +157,11 @@ export default function Analysis() {
                 <ResultCard result={result} />
               </div>
 
-              {/* Feature 3: Clinical BMD Assessment & WHO T-Score Correlate */}
+              {/* Feature 3: Clinical BMD Assessment & Continuous WHO T-Score */}
               <ClinicalBMDCard
                 predictedClass={result.predicted_class}
                 confidence={result.confidence}
+                predictions={result.predictions}
               />
 
               {result.status === 'UNCERTAIN' && (

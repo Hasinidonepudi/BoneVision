@@ -70,12 +70,20 @@ def apply_clahe(pil_image: Image.Image, clahe_cfg: dict) -> Image.Image:
     # Convert PIL → OpenCV BGR
     cv_img = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
-    # Convert to LAB and apply CLAHE on the L channel only
+    # Convert to LAB and apply robust exposure normalization + CLAHE on L channel
     lab = cv2.cvtColor(cv_img, cv2.COLOR_BGR2LAB)
     l_ch, a_ch, b_ch = cv2.split(lab)
 
+    # Rectification for Drawback #1: Photometric Exposure Standardization
+    # Normalizes scanner tube kVp/mAs exposure variations by stretching 1st to 99th percentiles
+    p1, p99 = np.percentile(l_ch, (1, 99))
+    if p99 > p1:
+        l_norm = np.clip((l_ch.astype(np.float32) - p1) / (p99 - p1) * 255.0, 0, 255).astype(np.uint8)
+    else:
+        l_norm = l_ch
+
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
-    l_enhanced = clahe.apply(l_ch)
+    l_enhanced = clahe.apply(l_norm)
 
     lab_enhanced = cv2.merge([l_enhanced, a_ch, b_ch])
     result_bgr = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)

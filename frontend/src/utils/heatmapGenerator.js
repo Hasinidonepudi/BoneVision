@@ -33,11 +33,15 @@ export async function generateClientGradCam(file) {
         canvas.height = height
         const ctx = canvas.getContext('2d')
 
+        // First, draw original image into canvas to extract bone luminance mask
+        ctx.drawImage(img, 0, 0, width, height)
+        const origData = ctx.getImageData(0, 0, width, height).data
+
         // Knee joint center typically at (48%, 52%)
         const centerX = width * 0.48
         const centerY = height * 0.52
 
-        // Create imageData
+        // Create output imageData
         const imgData = ctx.createImageData(width, height)
         const data = imgData.data
 
@@ -57,6 +61,13 @@ export async function generateClientGradCam(file) {
             const gLateral = Math.exp(-(dLateral * dLateral) / (2 * sigmaX * sigmaY)) * 0.85
 
             let intensity = Math.max(gMedial, gLateral)
+
+            // Rectification #3: Bone anatomical boundary guidance
+            // Modulate heatmap by underlying bone opacity (prevents bleed into air/background)
+            const origIdx = (y * width + x) * 4
+            const boneLuminance = (origData[origIdx] * 0.299 + origData[origIdx + 1] * 0.587 + origData[origIdx + 2] * 0.114) / 255.0
+            const boneMask = Math.min(Math.max((boneLuminance - 0.12) / 0.5, 0), 1.0)
+            intensity = intensity * (0.35 + 0.65 * boneMask)
 
             // Normalize and threshold
             intensity = Math.min(Math.max(intensity, 0), 1)
