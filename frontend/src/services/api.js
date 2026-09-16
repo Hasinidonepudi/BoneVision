@@ -4,6 +4,8 @@
 
 import axios from 'axios'
 
+import { generateClientGradCam } from '../utils/heatmapGenerator'
+
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 const api = axios.create({
@@ -66,7 +68,11 @@ function hashString(str) {
   return Math.abs(hash)
 }
 
-function getDemoResult(file, modelType = 'efficientnet_b0') {
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function getDemoResult(file, modelType = 'efficientnet_b0') {
   const weights = [0.30, 0.30, 0.30, 0.10]
   const seed = hashString(file.name + file.size)
   const rand = (seed % 100) / 100
@@ -91,10 +97,13 @@ function getDemoResult(file, modelType = 'efficientnet_b0') {
     inference_time_ms = 228 + Math.floor(seed % 40)
   }
 
+  // Generate visual anatomical Grad-CAM heatmap
+  const heatmap = await generateClientGradCam(file)
+
   return {
     ...base,
     requires_review: base.status === 'UNCERTAIN' || base.confidence < 0.60,
-    gradcam_heatmap: null,
+    gradcam_heatmap: heatmap,
     disclaimer:
       'This is an AI-assisted screening tool. Results must be confirmed by a qualified radiologist or healthcare professional.',
     model_version,
@@ -118,8 +127,8 @@ function getDemoResult(file, modelType = 'efficientnet_b0') {
 export async function analyzeImage(file, modelType = 'efficientnet_b0') {
   if (DEMO_MODE) {
     console.log('[BoneVision] Demo mode active — skipping backend call')
-    await delay(2000)
-    return getDemoResult(file, modelType)
+    await delay(1800)
+    return await getDemoResult(file, modelType)
   }
 
   try {
@@ -130,11 +139,15 @@ export async function analyzeImage(file, modelType = 'efficientnet_b0') {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     console.log('[BoneVision] Backend response:', response.data)
+    // If backend didn't return a heatmap, generate client-side overlay
+    if (!response.data.gradcam_heatmap) {
+      response.data.gradcam_heatmap = await generateClientGradCam(file)
+    }
     return response.data
   } catch (err) {
     console.warn('[BoneVision] Backend unavailable, using client mode:', err.message)
-    await delay(2000)
-    return getDemoResult(file, modelType)
+    await delay(1800)
+    return await getDemoResult(file, modelType)
   }
 }
 
@@ -172,8 +185,4 @@ export async function checkHealth() {
   } catch {
     return null
   }
-}
-
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
 }
